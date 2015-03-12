@@ -1,0 +1,71 @@
+---
+- hosts: all
+  port: 898
+  sudo: yes
+  handlers:
+    - name: remove webservice 
+      shell: docker rm -f webservice; true
+
+    - name: deploy webservice
+      docker: 
+        name: "webservice" 
+        image: "yaelle/engage-ws:latest"
+        volumes: "/home/engagevm/.m2/settings.xml:/root/.m2/settings.xml"
+        ports: "8080:8080"
+        links: "mysql:mysql"
+        state: "running"
+
+    - name: remove interface 
+      shell: docker rm -f interface; true
+
+    - name: migrate database
+      shell: docker run --rm -e RAILS_ENV=production yaelle/engage-interface rake db:migrate
+
+    - name: deploy interface
+      docker:
+        name: "interface" 
+        image: "yaelle/engage-interface:latest"
+        ports: "80:80"
+        env: "RAILS_ENV=production"
+        links: "mysql:mysql,webservice:ws"
+        dns: localhost
+        state: "running"
+
+  tasks:
+  # MYSQL
+  - name: deploy mysql
+    docker: 
+      name: "mysql" 
+      image: "mysql"
+      ports: "3306:3306"
+      volumes: "/var/lib/engage/mysql:/var/lib/mysql"
+      env: "MYSQL_ROOT_PASSWORD=123"
+    tags: mysql
+
+  # WEBSERVICE
+  - name: pull latest webservice
+    shell: docker pull yaelle/engage-ws:latest
+    register: result
+    changed_when: "'Downloaded newer image' in result.stdout"
+
+  - name: Check if webservice need to be updated
+    shell:  "docker ps | grep engage-ws | awk '{ print $2 }'"
+    register: result
+    changed_when: "'engage-ws' not in result.stdout"
+    notify: 
+    - remove webservice
+    - deploy webservice
+
+  # INTERFACE 
+  - name: pull latest interface
+    shell: docker pull yaelle/engage-interface:latest
+    changed_when: "'Downloaded newer image' in result.stdout"
+
+  - name: Check if interface need to be updated
+    shell:  "docker ps | grep interface | awk '{ print $2 }'"
+    register: result
+    changed_when: "'interface' not in result.stdout"
+    notify: 
+    - remove interface
+    - migrate database
+    - deploy interface

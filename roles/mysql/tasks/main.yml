@@ -1,0 +1,7 @@
+- name: run mysql
+  docker: 
+    name: "mysql" 
+    image: "mysql"
+    ports: "3306:3306"
+    volumes: "/var/lib/engage/mysql:/var/lib/mysql"
+    env: "MYSQL_ROOT_PASSWORD=123"
