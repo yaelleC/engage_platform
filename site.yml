@@ -13,7 +13,7 @@
         volumes: "/home/engagevm/.m2/settings.xml:/root/.m2/settings.xml"
         ports: "8080:8080"
         links: "mysql:mysql"
-        state: "running"
+        state: "started"
 
     - name: remove interface 
       shell: docker rm -f interface; true
@@ -29,7 +29,7 @@
         env: "RAILS_ENV=production"
         links: "mysql:mysql,webservice:ws"
         dns: localhost
-        state: "running"
+        state: "started"
 
   tasks:
   # MYSQL
