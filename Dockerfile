@@ -1,4 +1,3 @@
-FROM ansible/centos7-ansible:1.8
+FROM williamyeh/ansible:alpine3
 WORKDIR /opt/platform
-RUN yum install -y sshpass
 ADD . /opt/platform
