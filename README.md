@@ -18,8 +18,8 @@ install ansible
     pip install ansible
     ansible-playbook site.yml -i host_ip, --ask-pass -u username -vv
 
-** Solution 2: With Docker + fig **
-Install docker and fig.
-Edit the fig.yml file and set the username
+** Solution 2: With Docker**
+Install docker.
 
-	fig run ansible ansible-playbook site.yml -i host_ip, --ask-pass --ask-sudo-pass -u username -vv
+	docker build -t platform .
+	docker run -ti --rm  platform ansible-playbook site.yml -i host_ip, --ask-pass --ask-sudo-pass -u username -vv
